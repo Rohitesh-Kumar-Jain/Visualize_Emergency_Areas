@@ -1,0 +1,20 @@
+{
+  "components":[
+    {
+      "id":"area_1",
+      "model_type":0
+    },
+    {
+      "id":"35180582",
+      "model_type":1
+    },
+    {
+      "id":"35181229",
+      "model_type":1
+    },
+    {
+      "id":"35181230",
+      "model_type":1
+    }
+    ]
+}
