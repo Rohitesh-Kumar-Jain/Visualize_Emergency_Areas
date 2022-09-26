@@ -1,27 +1,29 @@
 package com.example.app
 
+import android.R
 import android.graphics.Color
 import android.os.Bundle
+import android.text.method.ScrollingMovementMethod
 import android.util.Log
-import android.view.Gravity.apply
+import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
 import com.esri.arcgisruntime.concurrent.ListenableFuture
-import com.esri.arcgisruntime.data.FeatureQueryResult
-import com.esri.arcgisruntime.data.QueryParameters
-import com.esri.arcgisruntime.data.ServiceFeatureTable
+import com.esri.arcgisruntime.data.*
 import com.esri.arcgisruntime.layers.FeatureLayer
 import com.esri.arcgisruntime.mapping.ArcGISMap
 import com.esri.arcgisruntime.mapping.BasemapStyle
 import com.esri.arcgisruntime.mapping.Viewpoint
+import com.esri.arcgisruntime.mapping.view.GraphicsOverlay
+import com.esri.arcgisruntime.mapping.view.IdentifyLayerResult
 import com.esri.arcgisruntime.mapping.view.MapView
 import com.esri.arcgisruntime.symbology.SimpleFillSymbol
 import com.esri.arcgisruntime.symbology.SimpleLineSymbol
-import com.esri.arcgisruntime.symbology.SimpleRenderer
-
 import com.example.app.databinding.ActivityMainBinding
+import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,31 +35,7 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.mapView
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        println("Start of the program")
-
-        setContentView(activityMainBinding.root)
-
-        setApiKeyForApp()
-
-        setupMap()
-    }
-
-    override fun onPause() {
-        mapView.pause()
-        super.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mapView.resume()
-    }
-
-    override fun onDestroy() {
-        mapView.dispose()
-        super.onDestroy()
-    }
+    private val graphicsOverlay: GraphicsOverlay by lazy { GraphicsOverlay() }
 
     private fun setApiKeyForApp() {
         ArcGISRuntimeEnvironment.setApiKey("AAPK5ea618c24b1d43ca9672b8329c88adc1EKFW0i1WBQ6pD9DAHnOCR7zqJXuvk2UobY9YsrsAcu63hUutb4MaMpY51iszA7bP")
@@ -73,6 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         // set the viewpoint, Viewpoint(latitude, longitude, scale)
         mapView.setViewpoint(Viewpoint(43.8971, -78.8658, 72000.0))
+        mapView.graphicsOverlays.add(graphicsOverlay)
 
         createFeatureLayer(map)
     }
@@ -100,14 +79,38 @@ class MainActivity : AppCompatActivity() {
 
         featureLayer.clearSelection()
         val featureTableToQuery = featureLayer.featureTable
+        val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
+        val fillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
 
         val query = QueryParameters()
         query.whereClause = ("1 = 1")
+
+//        val identifyLayerResultListenableFuture: ListenableFuture<IdentifyLayerResult> =
+//            serviceFeatureTable.queryFeaturesAsync(query)
+//        identifyLayerResultListenableFuture.addDoneListener {
+//            try {
+//                val identifyLayerResult =
+//                    identifyLayerResultListenableFuture.get()
+//                // create a textview to display field values
+//                for (element in identifyLayerResult.elements) {
+//                    val feature = element as Feature
+//                    // create a map of all available attributes as name value pairs
+//                    val attr =
+//                        feature.attributes
+//                    val keys: Set<String> = attr.keys
+//                    for (key in keys) {
+//                        var value = attr[key]
+//
+//                        println("$key | $value\n")
+//                    }
+//                }
+//            } catch (e1: Exception) {
+//
+//            }
+//        }
+
         val future: ListenableFuture<FeatureQueryResult> =
             serviceFeatureTable.queryFeaturesAsync(query)
-
-        val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
-        val fillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
 
         future.addDoneListener {
             try {
@@ -115,9 +118,16 @@ class MainActivity : AppCompatActivity() {
                 val result = future.get()
                 // check there are some results
                 val resultIterator = result.iterator()
+
                 while (resultIterator.hasNext()) {
-                    resultIterator.next().run {
-                        featureLayer.selectFeature(this)
+                    val feature: Feature = resultIterator.next()
+                    val attr: MutableMap<String, Any> = feature.attributes
+                    val keys = attr.keys
+
+                    for (key in keys) {
+                        val value: Any? = attr.get(key)
+
+                        println("${key} : ${value}")
                     }
                 }
             } catch (e: Exception) {
@@ -137,5 +147,31 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private val TAG: String = MainActivity::class.java.simpleName
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        println("Start of the program")
+
+        setContentView(activityMainBinding.root)
+
+        setApiKeyForApp()
+
+        setupMap()
+    }
+
+    override fun onPause() {
+        mapView.pause()
+        super.onPause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mapView.resume()
+    }
+
+    override fun onDestroy() {
+        mapView.dispose()
+        super.onDestroy()
     }
 }
