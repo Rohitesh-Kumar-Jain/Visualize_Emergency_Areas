@@ -1,4 +1,8 @@
 plugins {
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+}
+
+plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
@@ -12,6 +16,11 @@ android {
         targetSdkVersion 32
         versionCode 1
         versionName "1.0"
+
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+        buildConfigField "String", "API_KEY", "\"${properties.getProperty('API_KEY\\')}\""
     }
 
     buildTypes {
