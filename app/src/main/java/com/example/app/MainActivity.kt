@@ -1,12 +1,8 @@
 package com.example.app
 
-import android.R
 import android.graphics.Color
 import android.os.Bundle
-import android.text.method.ScrollingMovementMethod
 import android.util.Log
-import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
@@ -17,7 +13,6 @@ import com.esri.arcgisruntime.mapping.ArcGISMap
 import com.esri.arcgisruntime.mapping.BasemapStyle
 import com.esri.arcgisruntime.mapping.Viewpoint
 import com.esri.arcgisruntime.mapping.view.GraphicsOverlay
-import com.esri.arcgisruntime.mapping.view.IdentifyLayerResult
 import com.esri.arcgisruntime.mapping.view.MapView
 import com.esri.arcgisruntime.symbology.SimpleFillSymbol
 import com.esri.arcgisruntime.symbology.SimpleLineSymbol
@@ -56,8 +51,6 @@ class MainActivity : AppCompatActivity() {
         createFeatureLayer(map)
     }
 
-    // Create the parcels feature layer. When it is loaded, add a listener on the spinner.
-    // Add the layer to the map, and set the map view's selection properties to red.
     private fun createFeatureLayer(map: ArcGISMap) {
 
         val serviceFeatureTable =
@@ -65,7 +58,6 @@ class MainActivity : AppCompatActivity() {
 
         val featureLayer = FeatureLayer(serviceFeatureTable)
         // give the layer an ID so we can easily find it later, then add it to the map
-        featureLayer.id = "farcels"
 
         val messagesLog = assets.open("messages1.log")
         val structureJSON = assets.open("structure1.json")
@@ -85,32 +77,8 @@ class MainActivity : AppCompatActivity() {
         val query = QueryParameters()
         query.whereClause = ("1 = 1")
 
-//        val identifyLayerResultListenableFuture: ListenableFuture<IdentifyLayerResult> =
-//            serviceFeatureTable.queryFeaturesAsync(query)
-//        identifyLayerResultListenableFuture.addDoneListener {
-//            try {
-//                val identifyLayerResult =
-//                    identifyLayerResultListenableFuture.get()
-//                // create a textview to display field values
-//                for (element in identifyLayerResult.elements) {
-//                    val feature = element as Feature
-//                    // create a map of all available attributes as name value pairs
-//                    val attr =
-//                        feature.attributes
-//                    val keys: Set<String> = attr.keys
-//                    for (key in keys) {
-//                        var value = attr[key]
-//
-//                        println("$key | $value\n")
-//                    }
-//                }
-//            } catch (e1: Exception) {
-//
-//            }
-//        }
-
-        val future: ListenableFuture<FeatureQueryResult> =
-            serviceFeatureTable.queryFeaturesAsync(query)
+        val queryFields: ServiceFeatureTable.QueryFeatureFields = ServiceFeatureTable.QueryFeatureFields.LOAD_ALL
+        val future: ListenableFuture<FeatureQueryResult> = serviceFeatureTable.queryFeaturesAsync(query, queryFields)
 
         future.addDoneListener {
             try {
@@ -137,10 +105,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
-        /**
-         * Development ends here
-         */
 
         map.operationalLayers.add(featureLayer)
     }
