@@ -21,6 +21,7 @@ import com.esri.arcgisruntime.symbology.SimpleLineSymbol
 import com.esri.arcgisruntime.symbology.SimpleRenderer
 import com.example.app.databinding.ActivityMainBinding
 import java.util.*
+import kotlin.math.log
 
 
 class MainActivity : AppCompatActivity() {
@@ -38,8 +39,8 @@ class MainActivity : AppCompatActivity() {
     private var geos: HashMap<String, Feature> = HashMap<String, Feature>()
 
     private val timeStampedData by lazy {
-        val messagesLog = assets.open("messages1.log")
-        val structureJSON = assets.open("structure1.json")
+        val messagesLog = assets.open("messages.log")
+        val structureJSON = assets.open("structure.json")
         getTimeStampedDataFromLogFile(messagesLog, structureJSON)
     }
 
@@ -109,31 +110,31 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
-        System.out.println(geos)
-
-        println("EXITOS")
-        Log.e(TAG, "EXITOS")
     }
 
     private fun launchSimulation() {
         // set up timer with a certain interval.
         // at every interval, draw the map according to the results.
 
-        val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
-        val fillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
-//        featureLayer.renderer = SimpleRenderer(fillSymbol)
+        val curStampedData: MutableList<LogFileData> = timeStampedData.get(17)
 
-        val curStampedData: MutableList<LogFileData> = timeStampedData.get(0)
+//        System.out.println(timeStampedData)
+//        System.out.println(geos)
 
-        System.out.println(timeStampedData)
-        System.out.println(geos)
+        Log.e(TAG, "Launch Simulation")
+        println(timeStampedData)
+        println(curStampedData)
 
-        for (feature: Feature in geos.values) {
-            val geometry: Geometry = feature.geometry
-            val graphic: Graphic = Graphic(geometry)
+        for (logFileData in curStampedData) {
+            println("id ${logFileData.components.id}   message_data  ${logFileData.message_data}")
 
-            val simpleRenderer = SimpleRenderer(fillSymbol)
+            val simpleFillSymbol = getSimpleFillSymbol(logFileData.message_data)
+            val feature = geos.get(logFileData.components.id)
+            val graphic = Graphic(feature?.geometry)
+
+            println(feature)
+
+            val simpleRenderer = SimpleRenderer(simpleFillSymbol)
 
             val go = GraphicsOverlay().apply {
                 graphics.add(graphic)
@@ -142,6 +143,19 @@ class MainActivity : AppCompatActivity() {
 
             mapView.graphicsOverlays.add(go)
         }
+    }
+
+    private fun getSimpleFillSymbol(message_data : Int) : SimpleFillSymbol {
+        val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
+        val yellowFillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
+        val greenFillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.GREEN, lineSymbol)
+        val redFillSymbol: SimpleFillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.RED, lineSymbol)
+        val blueFillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.BLUE, lineSymbol)
+
+        if (message_data in 0..1) return yellowFillSymbol
+        else if (message_data in 2..4) return greenFillSymbol
+        else if (message_data in 4..6) return redFillSymbol
+        else return blueFillSymbol
     }
 
     companion object {
