@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
 
     private val graphicsOverlay: GraphicsOverlay by lazy { GraphicsOverlay() }
 
-    private val geos: HashMap<String, Feature> = HashMap<String, Feature>()
+    private var geos: HashMap<String, Feature> = HashMap<String, Feature>()
 
     private val timeStampedData by lazy {
         val messagesLog = assets.open("messages1.log")
@@ -79,34 +79,21 @@ class MainActivity : AppCompatActivity() {
      * Loads geographies
      */
     private fun loadGeographies(featureLayer : FeatureLayer, serviceFeatureTable : ServiceFeatureTable) {
-//        featureLayer.clearSelection()
-        val featureTableToQuery = featureLayer.featureTable
-        val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
-        val fillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
-
         val query = QueryParameters()
         query.whereClause = ("1 = 1")
 
         val queryFields: ServiceFeatureTable.QueryFeatureFields = ServiceFeatureTable.QueryFeatureFields.LOAD_ALL
         val future: ListenableFuture<FeatureQueryResult> = serviceFeatureTable.queryFeaturesAsync(query, queryFields)
 
-        future.addDoneListener {
+        future.let {
             try {
-                // call get on the future to get the result
                 val result = future.get()
-                // check there are some results
                 val resultIterator = result.iterator()
 
                 while (resultIterator.hasNext()) {
                     val feature: Feature = resultIterator.next()
-                    val attr: MutableMap<String, Any> = feature.attributes
-                    val keys = attr.keys
-
-                    for (key in keys) {
-                        val value: Any? = attr.get(key)
-
-                        println("${key} : ${value}")
-                    }
+                    val id  = feature.attributes.get("id")
+                    geos[id.toString()] = feature
                 }
             } catch (e: Exception) {
                 "That didn't work!".also {
@@ -116,18 +103,25 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        launchSimulation()
+        System.out.println(geos)
 
         println("EXITOS")
         Log.e(TAG, "EXITOS")
+
+        launchSimulation()
     }
 
     private fun launchSimulation() {
         // set up timer with a certain interval.
         // at every interval, draw the map according to the results.
 
-        println(timeStampedData)
-        println("HEMLOZS")
+        val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
+        val fillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
+
+        val curStampedData: MutableList<LogFileData> = timeStampedData.get(0)
+
+        System.out.println(timeStampedData)
+        System.out.println(geos)
     }
 
     companion object {
