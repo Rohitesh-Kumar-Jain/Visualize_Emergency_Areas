@@ -32,6 +32,14 @@ class MainActivity : AppCompatActivity() {
 
     private val graphicsOverlay: GraphicsOverlay by lazy { GraphicsOverlay() }
 
+    private val geos: HashMap<String, Feature> = HashMap<String, Feature>()
+
+    private val timeStampedData by lazy {
+        val messagesLog = assets.open("messages1.log")
+        val structureJSON = assets.open("structure1.json")
+        getTimeStampedDataFromLogFile(messagesLog, structureJSON)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -58,22 +66,20 @@ class MainActivity : AppCompatActivity() {
         mapView.setViewpoint(Viewpoint(43.8971, -78.8658, 72000.0))
         mapView.graphicsOverlays.add(graphicsOverlay)
 
-        createFeatureLayer(map)
-    }
-
-    private fun createFeatureLayer(map: ArcGISMap) {
-
         val serviceFeatureTable =
             ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
 
         val featureLayer = FeatureLayer(serviceFeatureTable)
 
-        val messagesLog = assets.open("messages1.log")
-        val structureJSON = assets.open("structure1.json")
+        map.operationalLayers.add(featureLayer)
+        loadGeographies(featureLayer, serviceFeatureTable)
+    }
 
-        val timeStampedData = getTimeStampedDataFromLogFile(messagesLog, structureJSON)
-
-        featureLayer.clearSelection()
+    /**
+     * Loads geographies
+     */
+    private fun loadGeographies(featureLayer : FeatureLayer, serviceFeatureTable : ServiceFeatureTable) {
+//        featureLayer.clearSelection()
         val featureTableToQuery = featureLayer.featureTable
         val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
         val fillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
@@ -110,7 +116,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        map.operationalLayers.add(featureLayer)
+        launchSimulation()
+
+        println("EXITOS")
+        Log.e(TAG, "EXITOS")
+    }
+
+    private fun launchSimulation() {
+        // set up timer with a certain interval.
+        // at every interval, draw the map according to the results.
+
+        println(timeStampedData)
+        println("HEMLOZS")
     }
 
     companion object {
