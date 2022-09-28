@@ -8,14 +8,17 @@ import androidx.appcompat.app.AppCompatActivity
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
 import com.esri.arcgisruntime.concurrent.ListenableFuture
 import com.esri.arcgisruntime.data.*
+import com.esri.arcgisruntime.geometry.Geometry
 import com.esri.arcgisruntime.layers.FeatureLayer
 import com.esri.arcgisruntime.mapping.ArcGISMap
 import com.esri.arcgisruntime.mapping.BasemapStyle
 import com.esri.arcgisruntime.mapping.Viewpoint
+import com.esri.arcgisruntime.mapping.view.Graphic
 import com.esri.arcgisruntime.mapping.view.GraphicsOverlay
 import com.esri.arcgisruntime.mapping.view.MapView
 import com.esri.arcgisruntime.symbology.SimpleFillSymbol
 import com.esri.arcgisruntime.symbology.SimpleLineSymbol
+import com.esri.arcgisruntime.symbology.SimpleRenderer
 import com.example.app.databinding.ActivityMainBinding
 import java.util.*
 
@@ -40,6 +43,8 @@ class MainActivity : AppCompatActivity() {
         getTimeStampedDataFromLogFile(messagesLog, structureJSON)
     }
 
+    private lateinit var featureLayer : FeatureLayer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -48,6 +53,8 @@ class MainActivity : AppCompatActivity() {
         setApiKeyForApp()
 
         setupMap()
+
+        launchSimulation()
     }
 
     private fun setApiKeyForApp() {
@@ -69,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         val serviceFeatureTable =
             ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
 
-        val featureLayer = FeatureLayer(serviceFeatureTable)
+        featureLayer = FeatureLayer(serviceFeatureTable)
 
         map.operationalLayers.add(featureLayer)
         loadGeographies(featureLayer, serviceFeatureTable)
@@ -107,8 +114,6 @@ class MainActivity : AppCompatActivity() {
 
         println("EXITOS")
         Log.e(TAG, "EXITOS")
-
-        launchSimulation()
     }
 
     private fun launchSimulation() {
@@ -117,11 +122,26 @@ class MainActivity : AppCompatActivity() {
 
         val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
         val fillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
+//        featureLayer.renderer = SimpleRenderer(fillSymbol)
 
         val curStampedData: MutableList<LogFileData> = timeStampedData.get(0)
 
         System.out.println(timeStampedData)
         System.out.println(geos)
+
+        for (feature: Feature in geos.values) {
+            val geometry: Geometry = feature.geometry
+            val graphic: Graphic = Graphic(geometry)
+
+            val simpleRenderer = SimpleRenderer(fillSymbol)
+
+            val go = GraphicsOverlay().apply {
+                graphics.add(graphic)
+                renderer = simpleRenderer
+            }
+
+            mapView.graphicsOverlays.add(go)
+        }
     }
 
     companion object {
