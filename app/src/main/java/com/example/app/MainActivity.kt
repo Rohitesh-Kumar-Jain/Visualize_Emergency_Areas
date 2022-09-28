@@ -32,6 +32,16 @@ class MainActivity : AppCompatActivity() {
 
     private val graphicsOverlay: GraphicsOverlay by lazy { GraphicsOverlay() }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContentView(activityMainBinding.root)
+
+        setApiKeyForApp()
+
+        setupMap()
+    }
+
     private fun setApiKeyForApp() {
         ArcGISRuntimeEnvironment.setApiKey("AAPK5ea618c24b1d43ca9672b8329c88adc1EKFW0i1WBQ6pD9DAHnOCR7zqJXuvk2UobY9YsrsAcu63hUutb4MaMpY51iszA7bP")
     }
@@ -57,17 +67,11 @@ class MainActivity : AppCompatActivity() {
             ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
 
         val featureLayer = FeatureLayer(serviceFeatureTable)
-        // give the layer an ID so we can easily find it later, then add it to the map
 
         val messagesLog = assets.open("messages1.log")
         val structureJSON = assets.open("structure1.json")
 
         val timeStampedData = getTimeStampedDataFromLogFile(messagesLog, structureJSON)
-
-        /**
-         * Under Development Code
-         */
-
 
         featureLayer.clearSelection()
         val featureTableToQuery = featureLayer.featureTable
@@ -111,17 +115,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private val TAG: String = MainActivity::class.java.simpleName
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        println("Start of the program")
-
-        setContentView(activityMainBinding.root)
-
-        setApiKeyForApp()
-
-        setupMap()
     }
 
     override fun onPause() {
