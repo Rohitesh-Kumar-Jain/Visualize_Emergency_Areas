@@ -147,15 +147,25 @@ class MainActivity : AppCompatActivity() {
 
     private fun getSimpleFillSymbol(message_data : Int) : SimpleFillSymbol {
         val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
-        val yellowFillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.YELLOW, lineSymbol)
-        val greenFillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.GREEN, lineSymbol)
-        val redFillSymbol: SimpleFillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.RED, lineSymbol)
-        val blueFillSymbol = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.BLUE, lineSymbol)
+        val firstFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(255,245,240), lineSymbol)
+        val secondFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(254,224,210), lineSymbol)
+        val thirdFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(252,187,161), lineSymbol)
+        val fourthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(252,146,114), lineSymbol)
+        val fifthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(251,106,74), lineSymbol)
+        val sixthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(239,59,44), lineSymbol)
+        val seventhFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(203,24,29), lineSymbol)
+        val eighthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(165,15,21), lineSymbol)
+        val ninthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(103,0,13), lineSymbol)
 
-        if (message_data in 0..1) return yellowFillSymbol
-        else if (message_data in 2..4) return greenFillSymbol
-        else if (message_data in 4..6) return redFillSymbol
-        else return blueFillSymbol
+        if (message_data in 0..1) return firstFillColor
+        else if (message_data in 2..4) return secondFillColor
+        else if (message_data in 4..6) return thirdFillColor
+        else if (message_data in 6..10) return fourthFillColor
+        else if (message_data in 11..15) return fifthFillColor
+        else if (message_data in 16.. 25) return sixthFillColor
+        else if (message_data in 26 .. 35) return seventhFillColor
+        else if (message_data in 36 .. 50) return eighthFillColor
+        else return ninthFillColor
     }
 
     companion object {
