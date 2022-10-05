@@ -19,6 +19,7 @@ import com.esri.arcgisruntime.mapping.view.GraphicsOverlay
 import com.esri.arcgisruntime.mapping.view.MapView
 import com.esri.arcgisruntime.symbology.SimpleRenderer
 import com.example.app.databinding.ActivityMainBinding
+import org.checkerframework.common.returnsreceiver.qual.This
 import java.util.*
 
 
@@ -33,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.mapView
     }
 
-//    private val graphicsOverlay: GraphicsOverlay by lazy { GraphicsOverlay() }
+    val graphicsOverlay: GraphicsOverlay by lazy { GraphicsOverlay() }
 
     private var geos: HashMap<String, Feature> = HashMap<String, Feature>()
 
@@ -42,9 +43,6 @@ class MainActivity : AppCompatActivity() {
         val structureJSON = assets.open("structure.json")
         getTimeStampedDataFromLogFile(messagesLog, structureJSON)
     }
-
-    private var timer = Timer()
-    private val DELAY: Long = 500 // Milliseconds
 
     private lateinit var featureLayer : FeatureLayer
 
@@ -58,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         setupMap()
 
         launchSimulation()
+
+        dummyFunction()
     }
 
     private fun setApiKeyForApp() {
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
 
         // set the viewpoint, Viewpoint(latitude, longitude, scale)
         mapView.setViewpoint(Viewpoint(43.8971, -78.8658, 72000.0))
-//        mapView.graphicsOverlays.add(graphicsOverlay)
+        mapView.graphicsOverlays.add(graphicsOverlay)
 
         val serviceFeatureTable =
             ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
@@ -126,74 +126,40 @@ class MainActivity : AppCompatActivity() {
 
         Log.e(TAG, "Launch Simulation")
 
-//        for (curStampedData in timeStampedData) {
-//
-//            timer.cancel()
-//            timer = Timer()
-//
-//            Log.e(TAG, "Next Iteration")
-//
-//            val stopWatch = Stopwatch.createStarted()
-//            val timer = Timer()
-//            timer.schedule(object : TimerTask() {
-//                override fun run() {
-//                    stopWatch.stop()
-//
-//                    for (logFileData in curStampedData) {
-//                        println("id ${logFileData.components.id}   message_data  ${logFileData.message_data}")
-//
-//                        val simpleFillSymbol = getSimpleFillSymbol(logFileData.message_data)
-//                        val feature = geos.get(logFileData.components.id)
-//                        val graphic = Graphic(feature?.geometry)
-//
-//                        println(feature)
-//
-//                        val simpleRenderer = SimpleRenderer(simpleFillSymbol)
-//
-//                        val go = GraphicsOverlay().apply {
-//                            graphics.add(graphic)
-//                            renderer = simpleRenderer
-//                        }
-//
-//                        mapView.graphicsOverlays.add(go)
-//                    }
-//                    timer.cancel()
-//                }
-//            }, 10000)
-//        }
+        val initialStampedData: MutableList<LogFileData> = timeStampedData.get(1)
+        var getGraphicFromFeature: HashMap<Feature?, Graphic> = HashMap<Feature?, Graphic>()
+
+        for (logFileData in initialStampedData) {
+            println("id ${logFileData.components.id}   message_data  ${logFileData.message_data}")
+
+            val simpleFillSymbol = getSimpleFillSymbol(logFileData.message_data)
+            val feature = geos.get(logFileData.components.id)
+            val graphic = Graphic(feature?.geometry, simpleFillSymbol)
+
+            getGraphicFromFeature[feature] = graphic
+
+            graphicsOverlay.graphics.add(graphic)
+        }
 
         for (curStampedData in timeStampedData) {
-
-            Log.e(TAG, "Next Iteration")
-
-            val map = ArcGISMap(BasemapStyle.ARCGIS_TOPOGRAPHIC)
-            mapView.map = map
-
-            val graphicsOverlay: GraphicsOverlay = GraphicsOverlay()
-            mapView.graphicsOverlays.add(graphicsOverlay)
-
-            for (logFileData in curStampedData) {
+            Log.w(TAG, "NEXT Iteration")
+            Thread.sleep(5000)
+            for (logFileData in initialStampedData) {
                 println("id ${logFileData.components.id}   message_data  ${logFileData.message_data}")
 
                 val simpleFillSymbol = getSimpleFillSymbol(logFileData.message_data)
                 val feature = geos.get(logFileData.components.id)
-                val graphic = Graphic(feature?.geometry)
+                val graphic = getGraphicFromFeature.get(feature)
 
-                println(feature)
-
-                val simpleRenderer = SimpleRenderer(simpleFillSymbol)
-
-                val go = GraphicsOverlay().apply {
-                    graphics.add(graphic)
-                    renderer = simpleRenderer
+                if (graphic != null) {
+                    graphic.symbol = simpleFillSymbol
                 }
-
-                mapView.graphicsOverlays.add(go)
             }
-            mapView.map
-            Thread.sleep(5000)
         }
+    }
 
+    fun dummyFunction() {
+        Log.e(TAG, "Last part of the code")
     }
 
     companion object {
