@@ -1,8 +1,7 @@
 package com.example.app
 
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
+import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
 import com.esri.arcgisruntime.concurrent.ListenableFuture
@@ -10,18 +9,16 @@ import com.esri.arcgisruntime.data.Feature
 import com.esri.arcgisruntime.data.FeatureQueryResult
 import com.esri.arcgisruntime.data.QueryParameters
 import com.esri.arcgisruntime.data.ServiceFeatureTable
-import com.esri.arcgisruntime.layers.FeatureLayer
 import com.esri.arcgisruntime.mapping.ArcGISMap
 import com.esri.arcgisruntime.mapping.BasemapStyle
 import com.esri.arcgisruntime.mapping.Viewpoint
 import com.esri.arcgisruntime.mapping.view.Graphic
 import com.esri.arcgisruntime.mapping.view.GraphicsOverlay
 import com.esri.arcgisruntime.mapping.view.MapView
-import com.esri.arcgisruntime.symbology.SimpleRenderer
 import com.example.app.databinding.ActivityMainBinding
-import org.checkerframework.common.returnsreceiver.qual.This
-import java.util.*
 
+
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -34,17 +31,16 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.mapView
     }
 
-    val graphicsOverlay: GraphicsOverlay by lazy { GraphicsOverlay() }
+    private var geos: HashMap<String, Graphic> = HashMap<String, Graphic>()
+    private var overlay: GraphicsOverlay = GraphicsOverlay()
 
-    private var geos: HashMap<String, Feature> = HashMap<String, Feature>()
-
-    private val timeStampedData by lazy {
+    private val data by lazy {
         val messagesLog = assets.open("messages.log")
         val structureJSON = assets.open("structure.json")
         getTimeStampedDataFromLogFile(messagesLog, structureJSON)
     }
 
-    private lateinit var featureLayer : FeatureLayer
+    private val delay: Long = 1000 // Milliseconds
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,9 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         setupMap()
 
-        launchSimulation()
-
-        dummyFunction()
+        runSimulation()
     }
 
     private fun setApiKeyForApp() {
@@ -68,98 +62,56 @@ class MainActivity : AppCompatActivity() {
      * Sets up a map
      */
     private fun setupMap() {
-        // create a map with a topographic basemap and set the map on the mapview
-        val map = ArcGISMap(BasemapStyle.ARCGIS_TOPOGRAPHIC)
-        mapView.map = map
-
-        // set the viewpoint, Viewpoint(latitude, longitude, scale)
+        mapView.map = ArcGISMap(BasemapStyle.ARCGIS_TOPOGRAPHIC)
         mapView.setViewpoint(Viewpoint(43.8971, -78.8658, 72000.0))
-        mapView.graphicsOverlays.add(graphicsOverlay)
+        mapView.graphicsOverlays.add(overlay)
 
-        val serviceFeatureTable =
-            ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
+        val qp = QueryParameters()
+        val qf = ServiceFeatureTable.QueryFeatureFields.LOAD_ALL
 
-        featureLayer = FeatureLayer(serviceFeatureTable)
+        qp.whereClause = ("1 = 1")
 
-        map.operationalLayers.add(featureLayer)
-        loadGeographies(featureLayer, serviceFeatureTable)
-    }
-
-    /**
-     * Loads geographies
-     */
-    private fun loadGeographies(featureLayer : FeatureLayer, serviceFeatureTable : ServiceFeatureTable) {
-        val query = QueryParameters()
-        query.whereClause = ("1 = 1")
-
-        val queryFields: ServiceFeatureTable.QueryFeatureFields = ServiceFeatureTable.QueryFeatureFields.LOAD_ALL
-        val future: ListenableFuture<FeatureQueryResult> = serviceFeatureTable.queryFeaturesAsync(query, queryFields)
+        val table = ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
+        val future: ListenableFuture<FeatureQueryResult> = table.queryFeaturesAsync(qp, qf)
 
         future.let {
-            try {
-                val result = future.get()
-                val resultIterator = result.iterator()
+            val iterator = future.get().iterator()
 
-                while (resultIterator.hasNext()) {
-                    val feature: Feature = resultIterator.next()
-                    val id  = feature.attributes.get("id")
-                    geos[id.toString()] = feature
-                }
-            } catch (e: Exception) {
-                "That didn't work!".also {
-                    Toast.makeText(this, it, Toast.LENGTH_LONG).show()
-                    Log.e(TAG, it)
-                }
+            while (iterator.hasNext()) {
+                val f: Feature = iterator.next()
+                val id = f.attributes["id"].toString()
+
+                geos[id] = Graphic(f.geometry, f.attributes)
+                overlay.graphics.add(geos[id])
             }
         }
     }
 
-    private fun launchSimulation() {
-        // set up timer with a certain interval.
-        // at every interval, draw the map according to the results.
+    private fun runSimulation() {
+        val handler = Handler()
+        var count = 0
 
-//        val curStampedData1: MutableList<LogFileData> = timeStampedData.get(17)
-//        val curStampedData2: MutableList<LogFileData> = timeStampedData.get(117)
+        val runnable: Runnable = object : Runnable {
+            override fun run() {
+                drawStep(count)
 
-//        System.out.println(timeStampedData)
-//        System.out.println(geos)
-
-        Log.e(TAG, "Launch Simulation")
-
-        val initialStampedData: MutableList<LogFileData> = timeStampedData.get(1)
-        var getGraphicFromFeature: HashMap<Feature?, Graphic> = HashMap<Feature?, Graphic>()
-
-        for (logFileData in initialStampedData) {
-            println("id ${logFileData.components.id}   message_data  ${logFileData.message_data}")
-
-            val simpleFillSymbol = getSimpleFillSymbol(logFileData.message_data)
-            val feature = geos.get(logFileData.components.id)
-            val graphic = Graphic(feature?.geometry, simpleFillSymbol)
-
-            getGraphicFromFeature[feature] = graphic
-
-            graphicsOverlay.graphics.add(graphic)
-        }
-
-        for (curStampedData in timeStampedData) {
-            Log.w(TAG, "NEXT Iteration")
-            Thread.sleep(5000)
-            for (logFileData in initialStampedData) {
-                println("id ${logFileData.components.id}   message_data  ${logFileData.message_data}")
-
-                val simpleFillSymbol = getSimpleFillSymbol(logFileData.message_data)
-                val feature = geos.get(logFileData.components.id)
-                val graphic = getGraphicFromFeature.get(feature)
-
-                if (graphic != null) {
-                    graphic.symbol = simpleFillSymbol
-                }
+                if (count++ < data.size) handler.postDelayed(this, delay)
             }
         }
+
+        // trigger first time
+        handler.post(runnable)
     }
 
-    fun dummyFunction() {
-        Log.e(TAG, "Last part of the code")
+    private fun drawStep(i: Int) {
+        println("drawing step $i...")
+        for (d in data[i]) {
+            val g = geos[d.components.id]
+
+            if (g != null) {
+                g.symbol = getSimpleFillSymbol(d.message_data)
+            }
+        }
     }
 
     companion object {
