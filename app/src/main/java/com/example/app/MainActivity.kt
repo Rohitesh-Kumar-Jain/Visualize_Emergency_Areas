@@ -1,27 +1,24 @@
 package com.example.app
 
-import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
+import android.os.Handler
 import androidx.appcompat.app.AppCompatActivity
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
 import com.esri.arcgisruntime.concurrent.ListenableFuture
-import com.esri.arcgisruntime.data.*
-import com.esri.arcgisruntime.geometry.Geometry
-import com.esri.arcgisruntime.layers.FeatureLayer
+import com.esri.arcgisruntime.data.Feature
+import com.esri.arcgisruntime.data.FeatureQueryResult
+import com.esri.arcgisruntime.data.QueryParameters
+import com.esri.arcgisruntime.data.ServiceFeatureTable
 import com.esri.arcgisruntime.mapping.ArcGISMap
 import com.esri.arcgisruntime.mapping.BasemapStyle
 import com.esri.arcgisruntime.mapping.Viewpoint
 import com.esri.arcgisruntime.mapping.view.Graphic
 import com.esri.arcgisruntime.mapping.view.GraphicsOverlay
 import com.esri.arcgisruntime.mapping.view.MapView
-import com.esri.arcgisruntime.symbology.SimpleFillSymbol
-import com.esri.arcgisruntime.symbology.SimpleLineSymbol
-import com.esri.arcgisruntime.symbology.SimpleRenderer
 import com.example.app.databinding.ActivityMainBinding
+
+
 import java.util.*
-import kotlin.math.log
 
 
 class MainActivity : AppCompatActivity() {
@@ -34,17 +31,16 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.mapView
     }
 
-    private val graphicsOverlay: GraphicsOverlay by lazy { GraphicsOverlay() }
+    private var geos: HashMap<String, Graphic> = HashMap<String, Graphic>()
+    private var overlay: GraphicsOverlay = GraphicsOverlay()
 
-    private var geos: HashMap<String, Feature> = HashMap<String, Feature>()
-
-    private val timeStampedData by lazy {
+    private val data by lazy {
         val messagesLog = assets.open("messages.log")
         val structureJSON = assets.open("structure.json")
         getTimeStampedDataFromLogFile(messagesLog, structureJSON)
     }
 
-    private lateinit var featureLayer : FeatureLayer
+    private val delay: Long = 1000 // Milliseconds
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,7 +51,7 @@ class MainActivity : AppCompatActivity() {
 
         setupMap()
 
-        launchSimulation()
+        runSimulation()
     }
 
     private fun setApiKeyForApp() {
@@ -66,106 +62,56 @@ class MainActivity : AppCompatActivity() {
      * Sets up a map
      */
     private fun setupMap() {
-        // create a map with a topographic basemap and set the map on the mapview
-        val map = ArcGISMap(BasemapStyle.ARCGIS_TOPOGRAPHIC)
-        mapView.map = map
-
-        // set the viewpoint, Viewpoint(latitude, longitude, scale)
+        mapView.map = ArcGISMap(BasemapStyle.ARCGIS_TOPOGRAPHIC)
         mapView.setViewpoint(Viewpoint(43.8971, -78.8658, 72000.0))
-        mapView.graphicsOverlays.add(graphicsOverlay)
+        mapView.graphicsOverlays.add(overlay)
 
-        val serviceFeatureTable =
-            ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
+        val qp = QueryParameters()
+        val qf = ServiceFeatureTable.QueryFeatureFields.LOAD_ALL
 
-        featureLayer = FeatureLayer(serviceFeatureTable)
+        qp.whereClause = ("1 = 1")
 
-        map.operationalLayers.add(featureLayer)
-        loadGeographies(featureLayer, serviceFeatureTable)
-    }
-
-    /**
-     * Loads geographies
-     */
-    private fun loadGeographies(featureLayer : FeatureLayer, serviceFeatureTable : ServiceFeatureTable) {
-        val query = QueryParameters()
-        query.whereClause = ("1 = 1")
-
-        val queryFields: ServiceFeatureTable.QueryFeatureFields = ServiceFeatureTable.QueryFeatureFields.LOAD_ALL
-        val future: ListenableFuture<FeatureQueryResult> = serviceFeatureTable.queryFeaturesAsync(query, queryFields)
+        val table = ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
+        val future: ListenableFuture<FeatureQueryResult> = table.queryFeaturesAsync(qp, qf)
 
         future.let {
-            try {
-                val result = future.get()
-                val resultIterator = result.iterator()
+            val iterator = future.get().iterator()
 
-                while (resultIterator.hasNext()) {
-                    val feature: Feature = resultIterator.next()
-                    val id  = feature.attributes.get("id")
-                    geos[id.toString()] = feature
-                }
-            } catch (e: Exception) {
-                "That didn't work!".also {
-                    Toast.makeText(this, it, Toast.LENGTH_LONG).show()
-                    Log.e(TAG, it)
-                }
+            while (iterator.hasNext()) {
+                val f: Feature = iterator.next()
+                val id = f.attributes["id"].toString()
+
+                geos[id] = Graphic(f.geometry, f.attributes)
+                overlay.graphics.add(geos[id])
             }
         }
     }
 
-    private fun launchSimulation() {
-        // set up timer with a certain interval.
-        // at every interval, draw the map according to the results.
+    private fun runSimulation() {
+        val handler = Handler()
+        var count = 0
 
-        val curStampedData: MutableList<LogFileData> = timeStampedData.get(17)
+        val runnable: Runnable = object : Runnable {
+            override fun run() {
+                drawStep(count)
 
-//        System.out.println(timeStampedData)
-//        System.out.println(geos)
-
-        Log.e(TAG, "Launch Simulation")
-        println(timeStampedData)
-        println(curStampedData)
-
-        for (logFileData in curStampedData) {
-            println("id ${logFileData.components.id}   message_data  ${logFileData.message_data}")
-
-            val simpleFillSymbol = getSimpleFillSymbol(logFileData.message_data)
-            val feature = geos.get(logFileData.components.id)
-            val graphic = Graphic(feature?.geometry)
-
-            println(feature)
-
-            val simpleRenderer = SimpleRenderer(simpleFillSymbol)
-
-            val go = GraphicsOverlay().apply {
-                graphics.add(graphic)
-                renderer = simpleRenderer
+                if (count++ < data.size) handler.postDelayed(this, delay)
             }
-
-            mapView.graphicsOverlays.add(go)
         }
+
+        // trigger first time
+        handler.post(runnable)
     }
 
-    private fun getSimpleFillSymbol(message_data : Int) : SimpleFillSymbol {
-        val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
-        val firstFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(255,245,240), lineSymbol)
-        val secondFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(254,224,210), lineSymbol)
-        val thirdFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(252,187,161), lineSymbol)
-        val fourthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(252,146,114), lineSymbol)
-        val fifthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(251,106,74), lineSymbol)
-        val sixthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(239,59,44), lineSymbol)
-        val seventhFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(203,24,29), lineSymbol)
-        val eighthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(165,15,21), lineSymbol)
-        val ninthFillColor = SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(103,0,13), lineSymbol)
+    private fun drawStep(i: Int) {
+        println("drawing step $i...")
+        for (d in data[i]) {
+            val g = geos[d.components.id]
 
-        if (message_data in 0..1) return firstFillColor
-        else if (message_data in 2..4) return secondFillColor
-        else if (message_data in 4..6) return thirdFillColor
-        else if (message_data in 6..10) return fourthFillColor
-        else if (message_data in 11..15) return fifthFillColor
-        else if (message_data in 16.. 25) return sixthFillColor
-        else if (message_data in 26 .. 35) return seventhFillColor
-        else if (message_data in 36 .. 50) return eighthFillColor
-        else return ninthFillColor
+            if (g != null) {
+                g.symbol = getSimpleFillSymbol(d.message_data)
+            }
+        }
     }
 
     companion object {
