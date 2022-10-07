@@ -42,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
     private val delay: Long = 1000 // Milliseconds
 
-    val mCallout : Callout by lazy {
+    val mCallout: Callout by lazy {
         mapView.callout
     }
 
@@ -79,7 +79,8 @@ class MainActivity : AppCompatActivity() {
 
         qp.whereClause = ("1 = 1")
 
-        val table = ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
+        val table =
+            ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
         areasLayer = FeatureLayer(table)
         mapView.map.operationalLayers.add(areasLayer)
         val future: ListenableFuture<FeatureQueryResult> = table.queryFeaturesAsync(qp, qf)
@@ -106,7 +107,13 @@ class MainActivity : AppCompatActivity() {
                         mCallout.dismiss();
                     }
 
-                    callOutPolgyon(Point(e.x.toInt(), e.y.toInt()), mapView, areasLayer, mCallout, applicationContext)
+                    callOutPolgyon(
+                        Point(e.x.toInt(), e.y.toInt()),
+                        mapView,
+                        areasLayer,
+                        mCallout,
+                        applicationContext
+                    )
                     return true
                 }
             }
