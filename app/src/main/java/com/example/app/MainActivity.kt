@@ -1,7 +1,10 @@
 package com.example.app
 
+import android.annotation.SuppressLint
+import android.graphics.Point
 import android.os.Bundle
 import android.os.Handler
+import android.view.MotionEvent
 import androidx.appcompat.app.AppCompatActivity
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
 import com.esri.arcgisruntime.concurrent.ListenableFuture
@@ -9,25 +12,22 @@ import com.esri.arcgisruntime.data.Feature
 import com.esri.arcgisruntime.data.FeatureQueryResult
 import com.esri.arcgisruntime.data.QueryParameters
 import com.esri.arcgisruntime.data.ServiceFeatureTable
+import com.esri.arcgisruntime.layers.FeatureLayer
 import com.esri.arcgisruntime.mapping.ArcGISMap
 import com.esri.arcgisruntime.mapping.BasemapStyle
 import com.esri.arcgisruntime.mapping.Viewpoint
-import com.esri.arcgisruntime.mapping.view.Graphic
-import com.esri.arcgisruntime.mapping.view.GraphicsOverlay
-import com.esri.arcgisruntime.mapping.view.MapView
+import com.esri.arcgisruntime.mapping.view.*
 import com.example.app.databinding.ActivityMainBinding
-
-
 import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
 
-    private val activityMainBinding by lazy {
+    val activityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
-    private val mapView: MapView by lazy {
+    val mapView: MapView by lazy {
         activityMainBinding.mapView
     }
 
@@ -42,6 +42,12 @@ class MainActivity : AppCompatActivity() {
 
     private val delay: Long = 1000 // Milliseconds
 
+    val mCallout : Callout by lazy {
+        mapView.callout
+    }
+
+    lateinit var areasLayer: FeatureLayer
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -50,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         setApiKeyForApp()
 
         setupMap()
+
+        setupUI()
 
         runSimulation()
     }
@@ -72,6 +80,8 @@ class MainActivity : AppCompatActivity() {
         qp.whereClause = ("1 = 1")
 
         val table = ServiceFeatureTable("https://services3.arcgis.com/R1QgHoeCpv6vXgCd/ArcGIS/rest/services/emergency_areas/FeatureServer/0")
+        areasLayer = FeatureLayer(table)
+        mapView.map.operationalLayers.add(areasLayer)
         val future: ListenableFuture<FeatureQueryResult> = table.queryFeaturesAsync(qp, qf)
 
         future.let {
@@ -83,6 +93,22 @@ class MainActivity : AppCompatActivity() {
 
                 geos[id] = Graphic(f.geometry, f.attributes)
                 overlay.graphics.add(geos[id])
+            }
+        }
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupUI() {
+        mapView.apply {
+            onTouchListener = object : DefaultMapViewOnTouchListener(this@MainActivity, mapView) {
+                override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                    if (mCallout.isShowing) {
+                        mCallout.dismiss();
+                    }
+
+                    callOutPolgyon(Point(e.x.toInt(), e.y.toInt()), mapView, areasLayer, mCallout, applicationContext)
+                    return true
+                }
             }
         }
     }
@@ -115,7 +141,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private val TAG: String = MainActivity::class.java.simpleName
+        val TAG: String = MainActivity::class.java.simpleName
     }
 
     override fun onPause() {

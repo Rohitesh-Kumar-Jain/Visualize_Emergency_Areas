@@ -1,6 +1,19 @@
 package com.example.app
 
+import android.content.Context
 import android.graphics.Color
+import android.graphics.Point
+import android.text.method.ScrollingMovementMethod
+import android.util.Log
+import android.view.View
+import android.widget.TextView
+import com.esri.arcgisruntime.concurrent.ListenableFuture
+import com.esri.arcgisruntime.data.Feature
+import com.esri.arcgisruntime.geometry.Envelope
+import com.esri.arcgisruntime.layers.FeatureLayer
+import com.esri.arcgisruntime.mapping.view.Callout
+import com.esri.arcgisruntime.mapping.view.IdentifyLayerResult
+import com.esri.arcgisruntime.mapping.view.MapView
 import com.esri.arcgisruntime.symbology.SimpleFillSymbol
 import com.esri.arcgisruntime.symbology.SimpleLineSymbol
 import org.json.JSONObject
@@ -96,4 +109,45 @@ fun getSimpleFillSymbol(message_data : Int) : SimpleFillSymbol {
     else if (message_data in 26 .. 35) return seventhFillColor
     else if (message_data in 36 .. 50) return eighthFillColor
     else return ninthFillColor
+}
+
+fun callOutPolgyon(screenPoint : Point, mapView : MapView, areasLayer : FeatureLayer, mCallout : Callout, applicationContext : Context) {
+    val identifyLayerResultListenableFuture: ListenableFuture<IdentifyLayerResult> = mapView
+        .identifyLayerAsync(areasLayer, screenPoint, 10.0, false, 1)
+
+    identifyLayerResultListenableFuture.addDoneListener {
+        try {
+            val identifyLayerResult =
+                identifyLayerResultListenableFuture.get()
+            val calloutContent = TextView(applicationContext)
+            calloutContent.setTextColor(Color.BLACK)
+            calloutContent.isSingleLine = false
+            calloutContent.isVerticalScrollBarEnabled = true
+            calloutContent.scrollBarStyle = View.SCROLLBARS_INSIDE_INSET
+            calloutContent.movementMethod = ScrollingMovementMethod()
+            calloutContent.setLines(6)
+            for (element in identifyLayerResult.elements) {
+                val feature =
+                    element as Feature
+
+                val attr =
+                    feature.attributes
+                val keys: Set<String> = attr.keys
+                for (key in keys) {
+                    var value = attr[key]
+                    calloutContent.append("$key | $value\n")
+                }
+
+                val envelope: Envelope = feature.geometry.extent
+                // uncomment this line, if you want to focus on the touched polygon
+//                    mapView.setViewpointGeometryAsync(envelope, 200.0)
+
+                mCallout.location = envelope.center
+                mCallout.content = calloutContent
+                mCallout.show()
+            }
+        } catch (e1: Exception) {
+            Log.e(MainActivity.TAG, "Select feature failed: " + e1.message)
+        }
+    }
 }
