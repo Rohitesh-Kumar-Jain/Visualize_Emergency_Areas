@@ -1,10 +1,14 @@
 package com.example.app
 
+import android.R
 import android.annotation.SuppressLint
 import android.graphics.Point
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.MotionEvent
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
 import com.esri.arcgisruntime.concurrent.ListenableFuture
@@ -18,6 +22,8 @@ import com.esri.arcgisruntime.mapping.BasemapStyle
 import com.esri.arcgisruntime.mapping.Viewpoint
 import com.esri.arcgisruntime.mapping.view.*
 import com.example.app.databinding.ActivityMainBinding
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
 
@@ -48,6 +54,27 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var areasLayer: FeatureLayer
 
+    private val fab: FloatingActionButton by lazy {
+        activityMainBinding.fab
+    }
+
+    private val startStopButton: Button by lazy {
+        activityMainBinding.startStopButton
+    }
+
+    private val opacitySeekBar: SeekBar by lazy {
+        activityMainBinding.progressSeekBar
+    }
+
+    private val currOpacityTextView: TextView by lazy {
+        activityMainBinding.progressTextView
+    }
+
+    private val fpsSpinner: Spinner by lazy {
+        activityMainBinding.fpsSpinner
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -59,7 +86,7 @@ class MainActivity : AppCompatActivity() {
 
         setupUI()
 
-        runSimulation()
+//        runSimulation()
     }
 
     private fun setApiKeyForApp() {
@@ -104,7 +131,7 @@ class MainActivity : AppCompatActivity() {
             onTouchListener = object : DefaultMapViewOnTouchListener(this@MainActivity, mapView) {
                 override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                     if (mCallout.isShowing) {
-                        mCallout.dismiss();
+                        mCallout.dismiss()
                     }
 
                     callOutPolgyon(
@@ -116,11 +143,34 @@ class MainActivity : AppCompatActivity() {
                     )
                     return true
                 }
+
+                override fun onTouch(view: View?, motionEvent: MotionEvent?): Boolean {
+                    if (fab.isExpanded) {
+                        fab.isExpanded = false
+                    }
+                    return super.onTouch(view, motionEvent)
+                }
             }
+        }
+
+        // show the options sheet when the floating action button is clicked
+        fab.setOnClickListener {
+            fab.isExpanded = true
+        }
+
+        fpsSpinner.apply {
+            // create an adapter with fps options
+            adapter = ArrayAdapter(
+                this@MainActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                arrayOf("500 ms", "200 ms", "100 ms")
+            )
         }
     }
 
-    private fun runSimulation() {
+    fun toggleAnimationTimer(view: View) {}
+
+    fun runSimulation() {
         val handler = Handler()
         var count = 0
 
