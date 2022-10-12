@@ -4,6 +4,6 @@
     <string name="resume">Resume</string>
     <string name="pause">Pause</string>
     <string name="progress">Progress:</string>
-    <string name="starting_opacity">1.0</string>
+    <string name="starting_progress">100.0 %</string>
 </resources>
 
