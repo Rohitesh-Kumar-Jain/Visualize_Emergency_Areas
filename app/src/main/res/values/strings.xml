@@ -1,8 +1,8 @@
 <resources>
 
     <string name="app_name">Visualize Emergency Areas</string>
-    <string name="start">Start</string>
-    <string name="stop">Stop</string>
+    <string name="resume">Resume</string>
+    <string name="pause">Pause</string>
     <string name="progress">Progress:</string>
     <string name="starting_opacity">1.0</string>
 </resources>

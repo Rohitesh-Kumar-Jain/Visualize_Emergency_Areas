@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
 import com.esri.arcgisruntime.concurrent.ListenableFuture
 import com.esri.arcgisruntime.data.Feature
@@ -46,7 +47,9 @@ class MainActivity : AppCompatActivity() {
         getTimeStampedDataFromLogFile(messagesLog, structureJSON)
     }
 
-    private val delay: Long = 1000 // Milliseconds
+    private val delay: Long = 100 // Milliseconds
+    private var isTimerRunning = true
+    
 
     val mCallout: Callout by lazy {
         mapView.callout
@@ -58,21 +61,23 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.fab
     }
 
-    private val startStopButton: Button by lazy {
-        activityMainBinding.startStopButton
+    private val resumePauseButton: Button by lazy {
+        activityMainBinding.resumePauseButton
     }
 
-    private val opacitySeekBar: SeekBar by lazy {
+    private val progressSeekBar: SeekBar by lazy {
         activityMainBinding.progressSeekBar
     }
 
-    private val currOpacityTextView: TextView by lazy {
+    private val curProgressTextView: TextView by lazy {
         activityMainBinding.progressTextView
     }
 
     private val fpsSpinner: Spinner by lazy {
         activityMainBinding.fpsSpinner
     }
+
+    private var count : Int = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,7 +91,7 @@ class MainActivity : AppCompatActivity() {
 
         setupUI()
 
-//        runSimulation()
+        runSimulation()
     }
 
     private fun setApiKeyForApp() {
@@ -151,6 +156,11 @@ class MainActivity : AppCompatActivity() {
                     return super.onTouch(view, motionEvent)
                 }
             }
+            // ensure the floating action button moves to be above the attribution view
+            addAttributionViewLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
+                val heightDelta = bottom - oldBottom
+                (fab.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin += heightDelta
+            }
         }
 
         // show the options sheet when the floating action button is clicked
@@ -168,16 +178,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun toggleAnimationTimer(view: View) {}
+    fun toggleAnimationTimer(view: View) {
+        isTimerRunning = when {
+            isTimerRunning -> {
+                resumePauseButton.text = getString(com.example.app.R.string.resume)
+                // set the isTimerRunning flag to false
+                false
+            }
+            else -> {
+                runSimulation()
+                resumePauseButton.text = getString(com.example.app.R.string.pause)
+                // set the isTimerRunning flag to true
+                true
+            }
+        }
+    }
 
     fun runSimulation() {
         val handler = Handler()
-        var count = 0
 
         val runnable: Runnable = object : Runnable {
             override fun run() {
                 drawStep(count)
-
+                if (!isTimerRunning) return;
                 if (count++ < data.size) handler.postDelayed(this, delay)
             }
         }
@@ -202,6 +225,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        if (isTimerRunning) {
+            toggleAnimationTimer(resumePauseButton)
+        }
         mapView.pause()
         super.onPause()
     }
