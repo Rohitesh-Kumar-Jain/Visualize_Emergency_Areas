@@ -1,11 +1,9 @@
 package com.example.app
 
-import android.R
 import android.annotation.SuppressLint
 import android.graphics.Point
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.*
@@ -24,7 +22,6 @@ import com.esri.arcgisruntime.mapping.Viewpoint
 import com.esri.arcgisruntime.mapping.view.*
 import com.example.app.databinding.ActivityMainBinding
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.snackbar.Snackbar
 import java.util.*
 
 
@@ -47,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         getTimeStampedDataFromLogFile(messagesLog, structureJSON)
     }
 
-    private val delay: Long = 100 // Milliseconds
+    private var delay: Long = 500 // Milliseconds
     private var isTimerRunning = true
     
 
@@ -173,8 +170,30 @@ class MainActivity : AppCompatActivity() {
             adapter = ArrayAdapter(
                 this@MainActivity,
                 android.R.layout.simple_spinner_dropdown_item,
-                arrayOf("500 ms", "200 ms", "100 ms")
+                arrayOf("1000 ms", "500 ms", "200 ms", "100 ms")
             )
+
+            // set period based on the fps option selected
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    delay = when (position) {
+                        0 -> 1000
+                        1 -> 500
+                        2 -> 200
+                        3 -> 100
+                        else -> 1000
+                    }
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+            // start with Delay of 500 ms
+            setSelection(1)
         }
     }
 
