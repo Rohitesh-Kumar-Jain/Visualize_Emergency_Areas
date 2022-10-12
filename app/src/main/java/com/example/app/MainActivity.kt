@@ -195,18 +195,29 @@ class MainActivity : AppCompatActivity() {
             // start with Delay of 500 ms
             setSelection(1)
         }
+
+        progressSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                // convert the seekbar progress (0 - 100) to a float 0.0 - 1.0
+                count = (progress * data.size)/100;
+                curProgressTextView.text = "$progress %"
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
     }
 
     fun toggleAnimationTimer(view: View) {
         isTimerRunning = when {
             isTimerRunning -> {
-                resumePauseButton.text = getString(com.example.app.R.string.resume)
+                resumePauseButton.text = getString(R.string.resume)
                 // set the isTimerRunning flag to false
                 false
             }
             else -> {
                 runSimulation()
-                resumePauseButton.text = getString(com.example.app.R.string.pause)
+                resumePauseButton.text = getString(R.string.pause)
                 // set the isTimerRunning flag to true
                 true
             }
@@ -219,7 +230,7 @@ class MainActivity : AppCompatActivity() {
         val runnable: Runnable = object : Runnable {
             override fun run() {
                 drawStep(count)
-                if (!isTimerRunning) return;
+                if (!isTimerRunning) return
                 if (count++ < data.size) handler.postDelayed(this, delay)
             }
         }
