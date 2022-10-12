@@ -5,7 +5,10 @@ import android.graphics.Point
 import android.os.Bundle
 import android.os.Handler
 import android.view.MotionEvent
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.esri.arcgisruntime.ArcGISRuntimeEnvironment
 import com.esri.arcgisruntime.concurrent.ListenableFuture
 import com.esri.arcgisruntime.data.Feature
@@ -18,6 +21,7 @@ import com.esri.arcgisruntime.mapping.BasemapStyle
 import com.esri.arcgisruntime.mapping.Viewpoint
 import com.esri.arcgisruntime.mapping.view.*
 import com.example.app.databinding.ActivityMainBinding
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 
 
@@ -40,13 +44,38 @@ class MainActivity : AppCompatActivity() {
         getTimeStampedDataFromLogFile(messagesLog, structureJSON)
     }
 
-    private val delay: Long = 1000 // Milliseconds
+    private var delay: Long = 500 // Milliseconds
+    private var isTimerRunning = true
+    
 
     val mCallout: Callout by lazy {
         mapView.callout
     }
 
     lateinit var areasLayer: FeatureLayer
+
+    private val fab: FloatingActionButton by lazy {
+        activityMainBinding.fab
+    }
+
+    private val resumePauseButton: Button by lazy {
+        activityMainBinding.resumePauseButton
+    }
+
+    private val progressSeekBar: SeekBar by lazy {
+        activityMainBinding.progressSeekBar
+    }
+
+    private val curProgressTextView: TextView by lazy {
+        activityMainBinding.progressTextView
+    }
+
+    private val fpsSpinner: Spinner by lazy {
+        activityMainBinding.fpsSpinner
+    }
+
+    private var count : Int = 0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,7 +133,7 @@ class MainActivity : AppCompatActivity() {
             onTouchListener = object : DefaultMapViewOnTouchListener(this@MainActivity, mapView) {
                 override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                     if (mCallout.isShowing) {
-                        mCallout.dismiss();
+                        mCallout.dismiss()
                     }
 
                     callOutPolgyon(
@@ -116,18 +145,91 @@ class MainActivity : AppCompatActivity() {
                     )
                     return true
                 }
+
+                override fun onTouch(view: View?, motionEvent: MotionEvent?): Boolean {
+                    if (fab.isExpanded) {
+                        fab.isExpanded = false
+                    }
+                    return super.onTouch(view, motionEvent)
+                }
+            }
+            // ensure the floating action button moves to be above the attribution view
+            addAttributionViewLayoutChangeListener { _, _, _, _, bottom, _, _, _, oldBottom ->
+                val heightDelta = bottom - oldBottom
+                (fab.layoutParams as CoordinatorLayout.LayoutParams).bottomMargin += heightDelta
+            }
+        }
+
+        // show the options sheet when the floating action button is clicked
+        fab.setOnClickListener {
+            fab.isExpanded = true
+        }
+
+        fpsSpinner.apply {
+            // create an adapter with fps options
+            adapter = ArrayAdapter(
+                this@MainActivity,
+                android.R.layout.simple_spinner_dropdown_item,
+                arrayOf("1000 ms", "500 ms", "200 ms", "100 ms")
+            )
+
+            // set period based on the fps option selected
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    delay = when (position) {
+                        0 -> 1000
+                        1 -> 500
+                        2 -> 200
+                        3 -> 100
+                        else -> 1000
+                    }
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+            // start with Delay of 500 ms
+            setSelection(1)
+        }
+
+        progressSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                count = (progress * data.size)/100;
+                curProgressTextView.text = "$progress %"
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+    }
+
+    fun toggleAnimationTimer(view: View) {
+        isTimerRunning = when {
+            isTimerRunning -> {
+                resumePauseButton.text = getString(R.string.resume)
+                // set the isTimerRunning flag to false
+                false
+            }
+            else -> {
+                runSimulation()
+                resumePauseButton.text = getString(R.string.pause)
+                // set the isTimerRunning flag to true
+                true
             }
         }
     }
 
-    private fun runSimulation() {
+    fun runSimulation() {
         val handler = Handler()
-        var count = 0
 
         val runnable: Runnable = object : Runnable {
             override fun run() {
                 drawStep(count)
-
+                if (!isTimerRunning) return
                 if (count++ < data.size) handler.postDelayed(this, delay)
             }
         }
@@ -152,6 +254,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
+        if (isTimerRunning) {
+            toggleAnimationTimer(resumePauseButton)
+        }
         mapView.pause()
         super.onPause()
     }
