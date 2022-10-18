@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
     private var delay: Long = 500 // Milliseconds
     private var isTimerRunning = true
-    
+
 
     val mCallout: Callout by lazy {
         mapView.callout
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.fpsSpinner
     }
 
-    private var count : Int = 0
+    private var count: Int = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -215,7 +215,7 @@ class MainActivity : AppCompatActivity() {
         // sets up progress bar
         progressSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                count = (progress * data.size)/100
+                count = (progress * data.size) / 100
                 curProgressTextView.text = "$progress %"
             }
 
