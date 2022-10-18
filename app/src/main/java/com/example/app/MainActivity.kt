@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
     private var delay: Long = 500 // Milliseconds
     private var isTimerRunning = true
-    
+
 
     val mCallout: Callout by lazy {
         mapView.callout
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
         activityMainBinding.fpsSpinner
     }
 
-    private var count : Int = 0
+    private var count: Int = 0
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,12 +91,22 @@ class MainActivity : AppCompatActivity() {
         runSimulation()
     }
 
+    /**
+     * Setup ArcGIS online API key
+     *
+     * You can get your own ArcGIS online API key from https://developers.arcgis.com/sign-up/
+     */
     private fun setApiKeyForApp() {
         ArcGISRuntimeEnvironment.setApiKey("AAPK5ea618c24b1d43ca9672b8329c88adc1EKFW0i1WBQ6pD9DAHnOCR7zqJXuvk2UobY9YsrsAcu63hUutb4MaMpY51iszA7bP")
     }
 
     /**
      * Sets up a map
+     *
+     * @author
+     *
+     * This function loads the feature table, decides the basemap style, initial view point,
+     * fetches all the polygons, maps id of a polygon with it's graphic
      */
     private fun setupMap() {
         mapView.map = ArcGISMap(BasemapStyle.ARCGIS_TOPOGRAPHIC)
@@ -128,6 +138,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("ClickableViewAccessibility")
+    /**
+     * defines the UI behaviour
+     *
+     * setups callout behaviour, defines spinner to control the speed of the animation, set-up a
+     * start-pause button, initializes progress.
+     */
     private fun setupUI() {
         mapView.apply {
             onTouchListener = object : DefaultMapViewOnTouchListener(this@MainActivity, mapView) {
@@ -196,9 +212,10 @@ class MainActivity : AppCompatActivity() {
             setSelection(1)
         }
 
+        // sets up progress bar
         progressSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                count = (progress * data.size)/100;
+                count = (progress * data.size) / 100
                 curProgressTextView.text = "$progress %"
             }
 
@@ -207,6 +224,11 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    /**
+     * implementation for pause-resume button
+     *
+     * @author Rohitesh
+     */
     fun toggleAnimationTimer(view: View) {
         isTimerRunning = when {
             isTimerRunning -> {
@@ -223,6 +245,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * runs simulation from start
+     *
+     * @author Bruno St.Aubin
+     */
     fun runSimulation() {
         val handler = Handler()
 
@@ -238,8 +265,18 @@ class MainActivity : AppCompatActivity() {
         handler.post(runnable)
     }
 
-    private fun drawStep(i: Int) {
+    /**
+     *  interates all ids in current time-stamp, and applies color to al polygons according to the
+     *  message values
+     *
+     *  @author Bruno St.Aubin
+     *
+     *  @param[j] current time stamp
+     */
+    private fun drawStep(j: Int) {
+        var i = j
         println("drawing step $i...")
+        i = i % data.size
         for (d in data[i]) {
             val g = geos[d.components.id]
 
