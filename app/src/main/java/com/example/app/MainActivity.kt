@@ -198,7 +198,7 @@ class MainActivity : AppCompatActivity() {
 
         progressSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                count = (progress * data.size)/100;
+                count = (progress * data.size)/100
                 curProgressTextView.text = "$progress %"
             }
 
@@ -238,8 +238,10 @@ class MainActivity : AppCompatActivity() {
         handler.post(runnable)
     }
 
-    private fun drawStep(i: Int) {
+    private fun drawStep(j: Int) {
+        var i = j
         println("drawing step $i...")
+        i = i % data.size
         for (d in data[i]) {
             val g = geos[d.components.id]
 
