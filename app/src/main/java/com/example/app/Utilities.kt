@@ -141,13 +141,13 @@ fun getSimpleFillSymbol(message_data: Int): SimpleFillSymbol {
         SimpleFillSymbol(SimpleFillSymbol.Style.SOLID, Color.rgb(103, 0, 13), lineSymbol)
 
     if (message_data in 0..1) return firstFillColor
-    else if (message_data in 2..4) return secondFillColor
-    else if (message_data in 4..6) return thirdFillColor
-    else if (message_data in 6..10) return fourthFillColor
-    else if (message_data in 11..15) return fifthFillColor
-    else if (message_data in 16..25) return sixthFillColor
-    else if (message_data in 26..35) return seventhFillColor
-    else if (message_data in 36..50) return eighthFillColor
+    else if (message_data in 2..14) return secondFillColor
+    else if (message_data in 15..36) return thirdFillColor
+    else if (message_data in 37..70) return fourthFillColor
+    else if (message_data in 71..115) return fifthFillColor
+    else if (message_data in 116..225) return sixthFillColor
+    else if (message_data in 226..335) return seventhFillColor
+    else if (message_data in 336..550) return eighthFillColor
     else return ninthFillColor
 }
 
