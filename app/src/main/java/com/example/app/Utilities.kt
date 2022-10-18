@@ -22,7 +22,13 @@ import java.io.InputStream
 
 
 /**
- * reads strucutre JSON file and retrieves the components array from the file
+ * reads structure JSON file and retrieves the components array from the file
+ *
+ * @author Rohitesh
+ *
+ * @param[structureJSON] is InputStream from the structureJSON file stored in asset
+ *
+ * @return this function returns a mutable list of components extracted from components array in the JSON file
  */
 fun getComponentsJSONArray(structureJSON: InputStream): MutableList<Components> {
     val jsonString: String = structureJSON.bufferedReader().use { it.readText() }
@@ -46,7 +52,12 @@ fun getComponentsJSONArray(structureJSON: InputStream): MutableList<Components> 
 /**
  * reads and stores the log file data according to the time stamps
  *
- * @param fileName  location of the log file to be parsed
+ * @author Rohitesh
+ *
+ * @param[messagesLog] InputStream for messages.log file stored in assets
+ * @param[structureJSON] InputStream for structure.json file stored in assets
+ *
+ * @return a mutable list of mutable list of , the outer list
  */
 fun getTimeStampedDataFromLogFile(
     messagesLog: InputStream,
@@ -78,10 +89,14 @@ fun getTimeStampedDataFromLogFile(
 }
 
 /**
- * helper function for {@link #readFileLineByLineUsingForEachLine
+ * helper function for [getTimeStampedDataFromLogFile]
  *
- * @param timeStampedData
- * @param currentTimeStamp
+ * @author Rohitesh
+ *
+ * This function creates a deep copy for a list of [LogFileData] which is containing LogFileData for the current time stamp
+ *
+ * @param[timeStampedData]
+ * @param[currentTimeStamp]
  */
 fun addClonedCurrentTimeStampToTimeStampedData(
     timeStampedData: MutableList<MutableList<LogFileData>>,
@@ -95,6 +110,15 @@ fun addClonedCurrentTimeStampToTimeStampedData(
     currentTimeStamp.clear()
 }
 
+/**
+ *  helps determine which color is to be used on the basis of the value passed
+ *
+ *  @author Rohitesh
+ *
+ *  @param[message_data] current state of the polyon
+ *
+ *  @return[SimpleFillSymbol] filled with color of choice according to the [message_data] passed
+ */
 fun getSimpleFillSymbol(message_data: Int): SimpleFillSymbol {
     val lineSymbol = SimpleLineSymbol(SimpleLineSymbol.Style.SOLID, Color.BLACK, 1.0f)
     val firstFillColor =
@@ -127,6 +151,17 @@ fun getSimpleFillSymbol(message_data: Int): SimpleFillSymbol {
     else return ninthFillColor
 }
 
+/**
+ * displays a [Callout] showing attributes associated with the tapped polygon
+ *
+ * @author Rohitesh
+ *
+ * @param[screenPoint]
+ * @param[mapView]
+ * @param[areasLayer]
+ * @param[mCallout]
+ * @param[applicationContext]
+ */
 fun callOutPolgyon(
     screenPoint: Point,
     mapView: MapView,

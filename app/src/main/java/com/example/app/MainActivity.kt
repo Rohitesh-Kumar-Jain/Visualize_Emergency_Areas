@@ -91,6 +91,9 @@ class MainActivity : AppCompatActivity() {
         runSimulation()
     }
 
+    /**
+     *
+     */
     private fun setApiKeyForApp() {
         ArcGISRuntimeEnvironment.setApiKey("AAPK5ea618c24b1d43ca9672b8329c88adc1EKFW0i1WBQ6pD9DAHnOCR7zqJXuvk2UobY9YsrsAcu63hUutb4MaMpY51iszA7bP")
     }
@@ -128,6 +131,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("ClickableViewAccessibility")
+    /**
+     *
+     */
     private fun setupUI() {
         mapView.apply {
             onTouchListener = object : DefaultMapViewOnTouchListener(this@MainActivity, mapView) {
@@ -207,6 +213,9 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    /**
+     *
+     */
     fun toggleAnimationTimer(view: View) {
         isTimerRunning = when {
             isTimerRunning -> {
@@ -223,6 +232,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     *
+     */
     fun runSimulation() {
         val handler = Handler()
 
@@ -238,6 +250,9 @@ class MainActivity : AppCompatActivity() {
         handler.post(runnable)
     }
 
+    /**
+     *
+     */
     private fun drawStep(j: Int) {
         var i = j
         println("drawing step $i...")
