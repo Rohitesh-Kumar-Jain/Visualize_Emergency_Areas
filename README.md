@@ -36,6 +36,8 @@ Prototype that allows users run simulations and visualize the results on a nativ
 <img width="526" alt="Screenshot 2022-10-20 at 12 18 34 AM" src="https://user-images.githubusercontent.com/62026125/196778260-c89b6c21-01c8-4c5c-ae03-6153133a507e.png">
 
 ## Progress
+  
+[![Overview of the application](https://res.cloudinary.com/marcomontalbano/image/upload/v1666210113/video_to_markdown/images/youtube--9xwazD5SyVg-c05b58ac6eb4c4700831b2b3070cd403.jpg)](https://www.youtube.com/watch?v=9xwazD5SyVg "Overview of the application")
 
 <p float="center">
 <img src="https://user-images.githubusercontent.com/62026125/196785028-f2cabb49-e5f8-4a39-bbee-a5aaf489bab6.png" width="30%" height="120%" /> &nbsp; &nbsp;
