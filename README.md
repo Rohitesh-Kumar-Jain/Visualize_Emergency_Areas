@@ -37,6 +37,11 @@ Prototype that allows users run simulations and visualize the results on a nativ
 
 ## Progress
 
+<img src="https://user-images.githubusercontent.com/62026125/196785028-f2cabb49-e5f8-4a39-bbee-a5aaf489bab6.png" width="30%" height="120%" />
+<img src="https://user-images.githubusercontent.com/62026125/196785034-47b45999-c747-4a5b-934e-694e22bd7883.png" width="30%" height="120%" />
+<img src="https://user-images.githubusercontent.com/62026125/196785039-9054fc7d-d216-423d-b87a-7f19ef39934c.png" width="30%" height="120%" />
+<img src="https://user-images.githubusercontent.com/62026125/196785042-0f77e4c5-101b-4972-89c7-c6e45751b1dc.png" width="30%" height="120%" />
+<img src="https://user-images.githubusercontent.com/62026125/196785045-f562fdea-bc28-423b-b40b-ab8e2175972a.png" width="30%" height="120%" />
 
 ## Next Steps, and Future Work
 * Execute simulation from the mobile device, and see results on the mobile application itself.
