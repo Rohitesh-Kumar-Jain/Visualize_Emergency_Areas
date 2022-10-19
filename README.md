@@ -31,7 +31,6 @@ Prototype that allows users run simulations and visualize the results on a nativ
 * Geographic Information System (GIS) is a system that creates, manages, analyzes, and maps all types of data.
 * ArcGIS is a GIS software developed by Esri, it is a set of software which has capabilities to view, edit, manage and analyze geographical data. 
 * ArcGIS Online is a cloud based solution to create and share interactive web maps, layers, and geographical data. Data can be published as web layers on ArcGIS online.
-![aaa6]()
 
 ## Architecture Diagram
 <img width="526" alt="Screenshot 2022-10-20 at 12 18 34 AM" src="https://user-images.githubusercontent.com/62026125/196778260-c89b6c21-01c8-4c5c-ae03-6153133a507e.png">
