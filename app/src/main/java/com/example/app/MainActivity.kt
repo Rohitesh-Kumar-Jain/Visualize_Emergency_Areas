@@ -1,6 +1,8 @@
 package com.example.app
 
 import android.annotation.SuppressLint
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.graphics.Point
 import android.os.Bundle
 import android.os.Handler
@@ -97,7 +99,12 @@ class MainActivity : AppCompatActivity() {
      * You can get your own ArcGIS online API key from https://developers.arcgis.com/sign-up/
      */
     private fun setApiKeyForApp() {
-        ArcGISRuntimeEnvironment.setApiKey("AAPK5ea618c24b1d43ca9672b8329c88adc1EKFW0i1WBQ6pD9DAHnOCR7zqJXuvk2UobY9YsrsAcu63hUutb4MaMpY51iszA7bP")
+        val ai: ApplicationInfo = applicationContext.packageManager
+            .getApplicationInfo(applicationContext.packageName, PackageManager.GET_META_DATA)
+        val value = ai.metaData["keyValue"]
+
+        val key = value.toString()
+        ArcGISRuntimeEnvironment.setApiKey(key)
     }
 
     /**
