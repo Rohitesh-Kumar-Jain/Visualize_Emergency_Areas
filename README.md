@@ -37,6 +37,7 @@ Prototype that allows users run simulations and visualize the results on a nativ
 
 ## Progress
 
+
 ## Next Steps, and Future Work
 * Execute simulation from the mobile device, and see results on the mobile application itself.
   * Visualize how the situation might look after a user decided time
